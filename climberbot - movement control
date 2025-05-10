@@ -1,0 +1,107 @@
+#include <Servo.h>
+
+// Define motor driver pins
+#define IN1 5
+#define IN2 6
+#define IN3 7
+#define IN4 8
+
+
+// Bluetooth module
+#define BT_RX 4  // Arduino RX (Connected to HC-05 TX)
+#define BT_TX 12  // Arduino TX (Connected to HC-05 RX)
+#define escpin 10
+#define TRIG_PIN 4
+#define ECHO_PIN 3
+
+
+char command;  // Variable to store received command
+Servo ESC;
+void setup() {
+ 
+    ESC.attach(10,1000,2000);
+    delay(2000);
+
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    pinMode(IN3, OUTPUT);
+    pinMode(IN4, OUTPUT);
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+    pinMode(11,OUTPUT);
+    ESC.write(180);
+    delay(1000);
+    ESC.write(0);
+  Serial.begin(9600);
+}
+
+void loop() {
+
+long duration;
+float distance;
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    // Measure the echo response time
+    duration = pulseIn(ECHO_PIN, HIGH);
+
+    // Convert the time to distance (speed of sound = 343 m/s)
+    distance = duration * 0.0343 / 2;
+    delay(100); // Wait for stability
+   
+      digitalWrite(11,LOW);
+
+   
+    if (Serial.available()) {
+        char command = Serial.read();
+         Serial.println(command);
+        // Motor Controls
+        if (command == 'F' && distance < 10) {  // Move Forward
+            digitalWrite(IN1, HIGH);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, HIGH);
+            digitalWrite(IN4, LOW);
+
+        }
+        else if (command == 'B') {  // Move Backward
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, HIGH);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, HIGH);
+
+
+        }
+        else if (command == 'L') {  // Turn Left
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, HIGH);
+            digitalWrite(IN3, HIGH);
+            digitalWrite(IN4, LOW);
+        }
+        else if (command == 'R') {  // Turn Right
+            digitalWrite(IN1, HIGH);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, HIGH);
+
+        }
+        if (distance > 10){  // Stop Motors
+            digitalWrite(IN1, LOW);
+            digitalWrite(IN2, LOW);
+            digitalWrite(IN3, LOW);
+            digitalWrite(IN4, LOW);
+            digitalWrite(11,HIGH);
+        }
+        else if(command == 'A'){
+          ESC.write(180);
+          delay(500);
+        }
+        else if(command == 'P'){
+          ESC.write(0);
+          delay(500);
+        }
+
+}
+}
